@@ -133,7 +133,8 @@ export const IrregularityTable = ({ data, onUpdateRegularizado }: IrregularityTa
             <TableHead>Operadora</TableHead>
             <TableHead>Irregularidade</TableHead>
             <TableHead>Status</TableHead>
-            <TableHead>Endereço</TableHead>
+            <TableHead>Logradouro</TableHead>
+            <TableHead>Nº Logradouro</TableHead>
             <TableHead>Data Email</TableHead>
           </TableRow>
         </TableHeader>
@@ -209,7 +210,10 @@ export const IrregularityTable = ({ data, onUpdateRegularizado }: IrregularityTa
                     )}
                   </TableCell>
                   <TableCell className="max-w-xs truncate">
-                    {group.logradouro}, {group.numLogradouro}
+                    {group.logradouro}
+                  </TableCell>
+                  <TableCell>
+                    {group.numLogradouro}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {!hasMultipleItems && group.items[0].dataEnvioEmail}
@@ -236,7 +240,8 @@ export const IrregularityTable = ({ data, onUpdateRegularizado }: IrregularityTa
                       {item.irregularidade}
                     </TableCell>
                     <TableCell>{getStatusBadge(item.regularizado, item.vencidas)}</TableCell>
-                    <TableCell className="text-sm">{item.logradouro}, {item.numLogradouro}</TableCell>
+                    <TableCell className="text-sm">{item.logradouro}</TableCell>
+                    <TableCell className="text-sm">{item.numLogradouro}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{item.dataEnvioEmail}</TableCell>
                   </TableRow>
                 ))}
