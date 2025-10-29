@@ -237,16 +237,21 @@ const Index = () => {
   }, [data]);
 
   const stats = useMemo(() => {
+    // Filtrar dados pelo município selecionado
+    const filteredByMunicipio = selectedMunicipio === "all" 
+      ? data 
+      : data.filter((item) => item.municipio === selectedMunicipio);
+
     // Contar apenas registros normais (não aguardando verificação)
-    const normalData = data.filter((item) => item.statusVerificacao === "normal");
+    const normalData = filteredByMunicipio.filter((item) => item.statusVerificacao === "normal");
     const total = normalData.length;
     const vencidas = normalData.filter((item) => item.vencidas < 0 && item.regularizado === "Não").length;
     const noPrazo = normalData.filter((item) => item.vencidas >= 0 && item.regularizado === "Não").length;
     const regularizadas = normalData.filter((item) => item.regularizado === "Sim").length;
-    const aguardandoVerificacao = data.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm").length;
+    const aguardandoVerificacao = filteredByMunicipio.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm").length;
 
     return { total, vencidas, noPrazo, regularizadas, aguardandoVerificacao };
-  }, [data]);
+  }, [data, selectedMunicipio]);
 
   // Preparar dados do gráfico
   const fluxoData = useMemo(() => {
