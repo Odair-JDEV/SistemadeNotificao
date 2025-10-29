@@ -369,6 +369,47 @@ const Index = () => {
               municipios={municipios}
             />
 
+            {/* Estatísticas do Município Selecionado */}
+            {selectedMunicipio !== "all" && (
+              <Card className="p-6">
+                <h3 className="text-xl font-semibold mb-4">
+                  Estatísticas de {selectedMunicipio}
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <StatsCard
+                    title="Total"
+                    value={stats.total}
+                    icon={FileText}
+                    variant="default"
+                  />
+                  <StatsCard
+                    title="Vencidas"
+                    value={stats.vencidas}
+                    icon={AlertCircle}
+                    variant="destructive"
+                  />
+                  <StatsCard
+                    title="No Prazo"
+                    value={stats.noPrazo}
+                    icon={Clock}
+                    variant="warning"
+                  />
+                  <StatsCard
+                    title="Regularizadas"
+                    value={stats.regularizadas}
+                    icon={CheckCircle}
+                    variant="success"
+                  />
+                  <StatsCard
+                    title="Aguardando JVM"
+                    value={stats.aguardandoVerificacao}
+                    icon={AlertTriangle}
+                    variant="info"
+                  />
+                </div>
+              </Card>
+            )}
+
             {/* Tabs para Registros, Verificação JVM e Gráfico */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
               <TabsList className="grid w-full max-w-2xl grid-cols-3">
