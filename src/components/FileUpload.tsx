@@ -9,6 +9,23 @@ interface FileUploadProps {
   onFileUpload: (data: Irregularity[], chartData: any[]) => void;
 }
 
+const normalizeColumnName = (name: string): string => {
+  return name.toLowerCase().trim().replace(/\s+/g, ' ');
+};
+
+const findColumn = (row: any, possibleNames: string[]): any => {
+  for (const name of possibleNames) {
+    if (row[name] !== undefined) return row[name];
+  }
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normalizeColumnName(key);
+    if (possibleNames.some(name => normalizeColumnName(name) === normalizedKey)) {
+      return row[key];
+    }
+  }
+  return "";
+};
+
 export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
   const { toast } = useToast();
 
@@ -20,7 +37,6 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
     
     reader.onload = (e) => {
       try {
-        // Verificar se é JSON
         if (file.name.endsWith('.json')) {
           const jsonContent = e.target?.result as string;
           const jsonData = JSON.parse(jsonContent);
@@ -34,47 +50,63 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
           return;
         }
 
-        // Processar Excel
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: "array" });
 
-        // Processar Page 1 - Registros
         const registrosSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const registrosJson = XLSX.utils.sheet_to_json(registrosSheet, { header: 1 }) as any[];
+        const registrosJson = XLSX.utils.sheet_to_json(registrosSheet) as any[];
         
-        // Converter dados de registros
-        const registros: Irregularity[] = registrosJson.slice(1).map((row: any) => ({
-          municipio: row[0] || "",
-          numFormulario: row[1]?.toString() || "",
-          numeroPoste: row[2]?.toString() || "",
-          operadora: row[3] || "",
-          irregularidade: row[4] || "",
-          vencidas: parseInt(row[5]) || 0,
-          noPrazo: row[6]?.toString() || "",
-          emailEnviado: row[7] || "",
-          dataEnvioEmail: row[8] || "",
-          regularizado: row[9] || "",
-          statusVerificacao: (row[10] === "aguardando_verificacao_jvm" ? "aguardando_verificacao_jvm" : "normal") as "normal" | "aguardando_verificacao_jvm",
-          bairro: row[10] || "",
-          logradouro: row[11] || "",
-          numLogradouro: row[12]?.toString() || "",
-        })).filter(item => item.municipio && item.municipio !== "TOTAL GERAL");
+        const registros: Irregularity[] = registrosJson.map((row: any) => {
+          const municipio = findColumn(row, ["Município", "MUNICÍPIO"]);
+          const numFormulario = findColumn(row, ["Núm. Formulário", "Nº Formulário", "Num. Formulário", "NUM. FORMULÁRIO"]);
+          const numeroPoste = findColumn(row, ["Número do Poste", "Numero do Poste", "NÚMERO DO POSTE"]);
+          const operadora = findColumn(row, ["Operadora", "OPERADORA"]);
+          const irregularidade = findColumn(row, ["Irregularidade", "IRREGULARIDADE"]);
+          const vencidas = findColumn(row, ["Vencidas", "Vencidas ", "VENCIDAS"]);
+          const noPrazo = findColumn(row, ["No Prazo", "No Prazo ", "NO PRAZO"]);
+          const emailEnviado = findColumn(row, ["E-mail Enviado?", "Email Enviado?", "E-mail Enviado", "EMAIL ENVIADO?"]);
+          const dataEnvioEmail = findColumn(row, ["Data Envio E-mail", "Data Envio Email", "DATA ENVIO E-MAIL"]);
+          const regularizado = findColumn(row, ["Regularizado?", "Regularizado", "REGULARIZADO?"]);
+          const bairro = findColumn(row, ["Bairro", "BAIRRO"]);
+          const logradouro = findColumn(row, ["Logradouro", "LOGRADOURO"]);
+          const numLogradouro = findColumn(row, ["Núm. Logradouro", "Nº Logradouro", "Num. Logradouro", "NUM. LOGRADOURO"]);
 
-        // Processar Page 2 - Gráfico (se existir)
+          return {
+            municipio: String(municipio || "").trim(),
+            numFormulario: String(numFormulario || "").trim(),
+            numeroPoste: String(numeroPoste || "").trim(),
+            operadora: String(operadora || "").trim(),
+            irregularidade: String(irregularidade || "").trim(),
+            vencidas: typeof vencidas === 'number' ? vencidas : (parseInt(String(vencidas || "0")) || 0),
+            noPrazo: String(noPrazo || "").trim(),
+            emailEnviado: String(emailEnviado || "").trim(),
+            dataEnvioEmail: String(dataEnvioEmail || "").trim(),
+            regularizado: String(regularizado || "Não").trim(),
+            statusVerificacao: "normal" as const,
+            bairro: String(bairro || "").trim(),
+            logradouro: String(logradouro || "").trim(),
+            numLogradouro: String(numLogradouro || "").trim(),
+          };
+        }).filter(item => item.municipio && item.municipio !== "TOTAL GERAL" && item.numFormulario);
+
         let chartData: any[] = [];
         if (workbook.SheetNames.length > 1) {
           const graficoSheet = workbook.Sheets[workbook.SheetNames[1]];
-          const graficoJson = XLSX.utils.sheet_to_json(graficoSheet, { header: 1 }) as any[];
+          const graficoJson = XLSX.utils.sheet_to_json(graficoSheet) as any[];
           
-          // Processar dados do gráfico
-          chartData = graficoJson.slice(3, 6).map((row: any, idx: number) => {
-            const mes = ["Agosto", "Setembro", "Outubro"][idx];
+          const months = ["Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho"];
+          chartData = graficoJson.filter(row => {
+            const firstCol = Object.values(row)[0];
+            return months.some(month => String(firstCol).includes(month.toUpperCase()) || String(firstCol).includes(month));
+          }).map((row: any) => {
+            const values = Object.values(row);
+            const monthName = String(values[0]).trim();
             return {
-              semana1: row[1] === "*" ? null : parseInt(row[1]) || null,
-              semana2: row[2] === "*" ? null : parseInt(row[2]) || null,
-              semana3: row[3] === "*" ? null : parseInt(row[3]) || null,
-              semana4: row[4] === "*" ? null : parseInt(row[4]) || null,
-              mes,
+              semana1: values[1] === "*" || !values[1] ? null : (typeof values[1] === 'number' ? values[1] : parseInt(String(values[1])) || null),
+              semana2: values[2] === "*" || !values[2] ? null : (typeof values[2] === 'number' ? values[2] : parseInt(String(values[2])) || null),
+              semana3: values[3] === "*" || !values[3] ? null : (typeof values[3] === 'number' ? values[3] : parseInt(String(values[3])) || null),
+              semana4: values[4] === "*" || !values[4] ? null : (typeof values[4] === 'number' ? values[4] : parseInt(String(values[4])) || null),
+              mes: monthName,
             };
           });
         }
@@ -83,7 +115,7 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
 
         toast({
           title: "Arquivo processado com sucesso!",
-          description: `${registros.length} registros importados.`,
+          description: `${registros.length} registros importados de ${file.name}`,
         });
       } catch (error) {
         console.error("Erro ao processar arquivo:", error);
@@ -95,7 +127,6 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
       }
     };
 
-    // Ler como texto se for JSON, como ArrayBuffer se for Excel
     if (file.name.endsWith('.json')) {
       reader.readAsText(file);
     } else {
@@ -104,15 +135,15 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
   }, [toast, onFileUpload]);
 
   return (
-    <Card className="p-8 border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer">
+    <Card className="p-8 border-2 border-dashed border-border hover:border-primary transition-colors cursor-pointer" data-testid="card-file-upload">
       <label htmlFor="file-upload" className="cursor-pointer">
         <div className="flex flex-col items-center justify-center gap-4">
           <div className="p-4 bg-primary/10 rounded-full">
-            <Upload className="w-8 h-8 text-primary" />
+            <Upload className="w-8 h-8 text-primary" data-testid="icon-upload" />
           </div>
           <div className="text-center">
-            <p className="text-lg font-medium">Upload de Arquivo</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-lg font-medium" data-testid="text-upload-title">Upload de Arquivo</p>
+            <p className="text-sm text-muted-foreground mt-1" data-testid="text-upload-description">
               Clique ou arraste um arquivo .xlsx ou .json aqui
             </p>
           </div>
@@ -123,6 +154,7 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
           accept=".xlsx,.xls,.json"
           onChange={handleFileUpload}
           className="hidden"
+          data-testid="input-file-upload"
         />
       </label>
     </Card>

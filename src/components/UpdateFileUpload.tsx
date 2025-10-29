@@ -10,6 +10,23 @@ interface UpdateFileUploadProps {
   currentData: Irregularity[];
 }
 
+const normalizeColumnName = (name: string): string => {
+  return name.toLowerCase().trim().replace(/\s+/g, ' ');
+};
+
+const findColumn = (row: any, possibleNames: string[]): any => {
+  for (const name of possibleNames) {
+    if (row[name] !== undefined) return row[name];
+  }
+  for (const key of Object.keys(row)) {
+    const normalizedKey = normalizeColumnName(key);
+    if (possibleNames.some(name => normalizeColumnName(name) === normalizedKey)) {
+      return row[key];
+    }
+  }
+  return "";
+};
+
 export const UpdateFileUpload = ({ onFileUpdate, currentData }: UpdateFileUploadProps) => {
   const { toast } = useToast();
 
@@ -22,75 +39,97 @@ export const UpdateFileUpload = ({ onFileUpdate, currentData }: UpdateFileUpload
         const arrayBuffer = await file.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer);
 
-        // Ler dados da primeira planilha (registros)
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         const newFileData: any[] = XLSX.utils.sheet_to_json(worksheet);
 
-        // Ler dados da segunda planilha (gráfico) se existir
         let newChartData: any[] = [];
         if (workbook.SheetNames.length > 1) {
           const secondSheetName = workbook.SheetNames[1];
           const chartSheet = workbook.Sheets[secondSheetName];
-          newChartData = XLSX.utils.sheet_to_json(chartSheet);
+          const graficoJson = XLSX.utils.sheet_to_json(chartSheet) as any[];
+          
+          const months = ["Agosto", "Setembro", "Outubro", "Novembro", "Dezembro", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho"];
+          newChartData = graficoJson.filter(row => {
+            const firstCol = Object.values(row)[0];
+            return months.some(month => String(firstCol).includes(month.toUpperCase()) || String(firstCol).includes(month));
+          }).map((row: any) => {
+            const values = Object.values(row);
+            const monthName = String(values[0]).trim();
+            return {
+              semana1: values[1] === "*" || !values[1] ? null : (typeof values[1] === 'number' ? values[1] : parseInt(String(values[1])) || null),
+              semana2: values[2] === "*" || !values[2] ? null : (typeof values[2] === 'number' ? values[2] : parseInt(String(values[2])) || null),
+              semana3: values[3] === "*" || !values[3] ? null : (typeof values[3] === 'number' ? values[3] : parseInt(String(values[3])) || null),
+              semana4: values[4] === "*" || !values[4] ? null : (typeof values[4] === 'number' ? values[4] : parseInt(String(values[4])) || null),
+              mes: monthName,
+            };
+          });
         }
 
-        // Criar um mapa dos registros existentes usando a chave composta
         const existingMap = new Map<string, Irregularity>();
         currentData.forEach(item => {
           const key = `${item.numFormulario}_${item.numeroPoste}`;
           existingMap.set(key, item);
         });
 
-        // Processar novos dados
         const mergedData: Irregularity[] = [];
         let addedCount = 0;
         let skippedCount = 0;
 
         newFileData.forEach((row) => {
+          const municipio = findColumn(row, ["Município", "MUNICÍPIO"]);
+          const numFormulario = findColumn(row, ["Núm. Formulário", "Nº Formulário", "Num. Formulário", "NUM. FORMULÁRIO"]);
+          const numeroPoste = findColumn(row, ["Número do Poste", "Numero do Poste", "NÚMERO DO POSTE"]);
+          const operadora = findColumn(row, ["Operadora", "OPERADORA"]);
+          const irregularidade = findColumn(row, ["Irregularidade", "IRREGULARIDADE"]);
+          const vencidas = findColumn(row, ["Vencidas", "Vencidas ", "VENCIDAS"]);
+          const noPrazo = findColumn(row, ["No Prazo", "No Prazo ", "NO PRAZO"]);
+          const emailEnviado = findColumn(row, ["E-mail Enviado?", "Email Enviado?", "E-mail Enviado", "EMAIL ENVIADO?"]);
+          const dataEnvioEmail = findColumn(row, ["Data Envio E-mail", "Data Envio Email", "DATA ENVIO E-MAIL"]);
+          const regularizado = findColumn(row, ["Regularizado?", "Regularizado", "REGULARIZADO?"]);
+          const bairro = findColumn(row, ["Bairro", "BAIRRO"]);
+          const logradouro = findColumn(row, ["Logradouro", "LOGRADOURO"]);
+          const numLogradouro = findColumn(row, ["Núm. Logradouro", "Nº Logradouro", "Num. Logradouro", "NUM. LOGRADOURO"]);
+
           const newItem: Irregularity = {
-            municipio: String(row["Município"] ?? "").trim(),
-            numFormulario: String(row["Nº Formulário"] ?? "").trim(),
-            numeroPoste: String(row["Número do Poste"] ?? "").trim(),
-            operadora: String(row["Operadora"] ?? "").trim(),
-            irregularidade: String(row["Irregularidade"] ?? "").trim(),
-            vencidas: typeof row["Vencidas"] === 'number' ? row["Vencidas"] : (parseInt(String(row["Vencidas"] ?? "0")) || 0),
-            noPrazo: String(row["No Prazo"] ?? "").trim(),
-            emailEnviado: String(row["Email Enviado"] ?? "").trim(),
-            dataEnvioEmail: String(row["Data Envio Email"] ?? "").trim(),
-            regularizado: "Não", // Novo arquivo sempre vem com status "Não"
+            municipio: String(municipio || "").trim(),
+            numFormulario: String(numFormulario || "").trim(),
+            numeroPoste: String(numeroPoste || "").trim(),
+            operadora: String(operadora || "").trim(),
+            irregularidade: String(irregularidade || "").trim(),
+            vencidas: typeof vencidas === 'number' ? vencidas : (parseInt(String(vencidas || "0")) || 0),
+            noPrazo: String(noPrazo || "").trim(),
+            emailEnviado: String(emailEnviado || "").trim(),
+            dataEnvioEmail: String(dataEnvioEmail || "").trim(),
+            regularizado: "Não",
             statusVerificacao: "normal",
-            bairro: String(row["Bairro"] ?? "").trim(),
-            logradouro: String(row["Logradouro"] ?? "").trim(),
-            numLogradouro: String(row["Nº Logradouro"] ?? "").trim(),
+            bairro: String(bairro || "").trim(),
+            logradouro: String(logradouro || "").trim(),
+            numLogradouro: String(numLogradouro || "").trim(),
           };
+
+          if (!newItem.municipio || !newItem.numFormulario) return;
+          if (newItem.municipio === "TOTAL GERAL") return;
 
           const key = `${newItem.numFormulario}_${newItem.numeroPoste}`;
           const existingItem = existingMap.get(key);
 
           if (existingItem) {
-            // Se o item existe E já está regularizado
             if (existingItem.regularizado === "Sim") {
-              // Marcar como aguardando verificação JVM
               newItem.statusVerificacao = "aguardando_verificacao_jvm";
               mergedData.push(newItem);
               addedCount++;
             } else {
-              // Se existe mas NÃO está regularizado, adicionar o novo registro
               mergedData.push(newItem);
               addedCount++;
             }
-            // Remover do mapa para controlar o que sobra
             existingMap.delete(key);
           } else {
-            // Se é um registro completamente novo, adicionar
             mergedData.push(newItem);
             addedCount++;
           }
         });
 
-        // Adicionar os registros que estavam no arquivo antigo mas não vieram no novo
-        // (apenas os que estão regularizados, para manter o histórico)
         existingMap.forEach(item => {
           if (item.regularizado === "Sim") {
             mergedData.push(item);
@@ -105,7 +144,6 @@ export const UpdateFileUpload = ({ onFileUpdate, currentData }: UpdateFileUpload
           description: `${addedCount} registros atualizados/adicionados, ${skippedCount} regularizados mantidos.`,
         });
 
-        // Resetar o input
         event.target.value = "";
       } catch (error) {
         console.error("Erro ao processar arquivo:", error);
@@ -120,18 +158,18 @@ export const UpdateFileUpload = ({ onFileUpdate, currentData }: UpdateFileUpload
   );
 
   return (
-    <Card className="border-2 border-dashed hover:border-primary/50 transition-colors">
+    <Card className="border-2 border-dashed hover:border-primary/50 transition-colors" data-testid="card-update-file-upload">
       <label htmlFor="update-file-upload" className="cursor-pointer block p-8">
         <div className="flex flex-col items-center justify-center space-y-4">
           <div className="p-4 bg-primary/10 rounded-full">
-            <Upload className="w-8 h-8 text-primary" />
+            <Upload className="w-8 h-8 text-primary" data-testid="icon-update-upload" />
           </div>
           <div className="text-center">
-            <p className="text-lg font-medium">Atualizar arquivo semanal</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-lg font-medium" data-testid="text-update-upload-title">Atualizar arquivo semanal</p>
+            <p className="text-sm text-muted-foreground mt-1" data-testid="text-update-upload-description">
               Clique para fazer upload do novo arquivo (.xlsx)
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground mt-2" data-testid="text-update-upload-note">
               Registros já regularizados que reaparecerem irão para "Aguardando JVM"
             </p>
           </div>
@@ -142,6 +180,7 @@ export const UpdateFileUpload = ({ onFileUpdate, currentData }: UpdateFileUpload
           accept=".xlsx"
           onChange={handleFileUpload}
           className="hidden"
+          data-testid="input-update-file-upload"
         />
       </label>
     </Card>
