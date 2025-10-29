@@ -1,0 +1,92 @@
+===================================================
+SISTEMA DE GESTÃO DE IRREGULARIDADES EM POSTES
+===================================================
+
+DESCRIÇÃO GERAL
+---------------
+Sistema web para monitoramento e gestão de irregularidades encontradas em postes de telecomunicações, 
+permitindo o controle de prazos, envio de e-mails, e acompanhamento de regularizações.
+
+
+FUNCIONALIDADES PRINCIPAIS
+---------------------------
+
+1. IMPORTAÇÃO DE DADOS
+   - Upload de arquivos semanais (.xlsx ou .json)
+   - Atualização de dados existentes preservando itens já regularizados
+   - Importação de dados de gráficos e estatísticas
+
+2. VISUALIZAÇÃO DE IRREGULARIDADES
+   - Tabela agrupada por município e número de formulário
+   - Expansão de grupos para visualizar postes individuais
+   - Informações detalhadas: operadora, tipo de irregularidade, endereço completo
+
+3. GESTÃO DE STATUS
+   - Marcação manual de irregularidades regularizadas
+   - Controle de prazos (vencidas vs. no prazo)
+   - Rastreamento de envio de e-mails às operadoras
+   - Informações sobre data de envio de notificações
+
+4. FILTROS E BUSCA
+   - Filtro por município
+   - Filtro por operadora
+   - Filtro por status (vencidas, no prazo, regularizadas, pendentes)
+   - Busca por texto livre
+
+5. ESTATÍSTICAS E INDICADORES
+   - Total de irregularidades cadastradas
+   - Quantidade de irregularidades vencidas
+   - Quantidade no prazo
+   - Quantidade regularizadas
+   - Quantidade pendentes
+   - Distribuição por município
+   - Distribuição por operadora
+
+6. VISUALIZAÇÃO GRÁFICA
+   - Gráficos de fluxo/evolução das irregularidades
+   - Representação visual dos dados importados
+
+7. EXPORTAÇÃO
+   - Exportação de dados filtrados para Excel
+
+
+DADOS GERENCIADOS
+------------------
+Para cada irregularidade, o sistema armazena:
+- Município
+- Número do formulário
+- Número do poste
+- Operadora responsável
+- Tipo de irregularidade
+- Dias vencidos
+- Status do prazo
+- Status de envio de e-mail
+- Data de envio do e-mail
+- Status de regularização
+- Endereço completo (bairro, logradouro, número)
+
+
+FLUXO DE TRABALHO TÍPICO
+-------------------------
+1. Importar dados semanais das irregularidades encontradas
+2. Sistema processa e exibe estatísticas gerais
+3. Revisar tabela de irregularidades por município
+4. Filtrar por status, município ou operadora conforme necessário
+5. Marcar irregularidades como regularizadas quando resolvidas
+6. Atualizar dados semanalmente preservando regularizações anteriores
+7. Exportar relatórios quando necessário
+
+
+TECNOLOGIAS UTILIZADAS
+-----------------------
+- Interface web responsiva
+- Processamento de arquivos Excel
+- Visualização de dados com gráficos interativos
+- Sistema de filtros em tempo real
+- Armazenamento local dos dados
+
+
+PÚBLICO-ALVO
+------------
+Gestores públicos e equipes responsáveis pela fiscalização e regularização 
+de infraestrutura de telecomunicações em postes.
