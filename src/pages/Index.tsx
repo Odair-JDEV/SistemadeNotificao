@@ -8,6 +8,7 @@ import { Filters } from "@/components/Filters";
 import { FluxoChart } from "@/components/FluxoChart";
 import { Irregularity } from "@/types/irregularity";
 import { AlertCircle, CheckCircle, Clock, FileText, Download, AlertTriangle } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const Index = () => {
   const [selectedMunicipio, setSelectedMunicipio] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [activeTab, setActiveTab] = useState("registros");
+  const [logradouroSearch, setLogradouroSearch] = useState("");
 
   const handleFileUpload = (newData: Irregularity[], newChartData: any[]) => {
     setData(newData);
@@ -253,7 +255,15 @@ const Index = () => {
   const municipioStats = useMemo(() => {
     if (selectedMunicipio === "all") return null;
 
-    const filteredByMunicipio = data.filter((item) => item.municipio === selectedMunicipio);
+    let filteredByMunicipio = data.filter((item) => item.municipio === selectedMunicipio);
+    
+    // Filtrar por logradouro se houver busca
+    if (logradouroSearch.trim()) {
+      filteredByMunicipio = filteredByMunicipio.filter((item) => 
+        item.logradouro.toLowerCase().includes(logradouroSearch.toLowerCase())
+      );
+    }
+    
     const normalData = filteredByMunicipio.filter((item) => item.statusVerificacao === "normal");
     const total = normalData.length;
     const vencidas = normalData.filter((item) => item.vencidas < 0 && item.regularizado === "Não").length;
@@ -262,7 +272,7 @@ const Index = () => {
     const aguardandoVerificacao = filteredByMunicipio.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm").length;
 
     return { total, vencidas, noPrazo, regularizadas, aguardandoVerificacao };
-  }, [data, selectedMunicipio]);
+  }, [data, selectedMunicipio, logradouroSearch]);
 
   // Preparar dados do gráfico
   const fluxoData = useMemo(() => {
@@ -383,10 +393,24 @@ const Index = () => {
             {/* Estatísticas do Município Selecionado */}
             {selectedMunicipio !== "all" && municipioStats && (
               <Card className="p-6">
-                <h3 className="text-xl font-semibold mb-4">
-                  Estatísticas de {selectedMunicipio}
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold">
+                      Estatísticas de {selectedMunicipio}
+                    </h3>
+                  </div>
+                  
+                  <div className="max-w-md">
+                    <Input
+                      placeholder="Buscar por logradouro..."
+                      value={logradouroSearch}
+                      onChange={(e) => setLogradouroSearch(e.target.value)}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
                   <StatsCard
                     title="Total"
                     value={municipioStats.total}
