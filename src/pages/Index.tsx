@@ -236,13 +236,24 @@ const Index = () => {
     return data.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm");
   }, [data]);
 
+  // Stats principais - sempre mostram o total geral
   const stats = useMemo(() => {
-    // Filtrar dados pelo município selecionado
-    const filteredByMunicipio = selectedMunicipio === "all" 
-      ? data 
-      : data.filter((item) => item.municipio === selectedMunicipio);
-
     // Contar apenas registros normais (não aguardando verificação)
+    const normalData = data.filter((item) => item.statusVerificacao === "normal");
+    const total = normalData.length;
+    const vencidas = normalData.filter((item) => item.vencidas < 0 && item.regularizado === "Não").length;
+    const noPrazo = normalData.filter((item) => item.vencidas >= 0 && item.regularizado === "Não").length;
+    const regularizadas = normalData.filter((item) => item.regularizado === "Sim").length;
+    const aguardandoVerificacao = data.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm").length;
+
+    return { total, vencidas, noPrazo, regularizadas, aguardandoVerificacao };
+  }, [data]);
+
+  // Stats do município filtrado - apenas quando há filtro selecionado
+  const municipioStats = useMemo(() => {
+    if (selectedMunicipio === "all") return null;
+
+    const filteredByMunicipio = data.filter((item) => item.municipio === selectedMunicipio);
     const normalData = filteredByMunicipio.filter((item) => item.statusVerificacao === "normal");
     const total = normalData.length;
     const vencidas = normalData.filter((item) => item.vencidas < 0 && item.regularizado === "Não").length;
@@ -370,7 +381,7 @@ const Index = () => {
             />
 
             {/* Estatísticas do Município Selecionado */}
-            {selectedMunicipio !== "all" && (
+            {selectedMunicipio !== "all" && municipioStats && (
               <Card className="p-6">
                 <h3 className="text-xl font-semibold mb-4">
                   Estatísticas de {selectedMunicipio}
@@ -378,31 +389,31 @@ const Index = () => {
                 <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                   <StatsCard
                     title="Total"
-                    value={stats.total}
+                    value={municipioStats.total}
                     icon={FileText}
                     variant="default"
                   />
                   <StatsCard
                     title="Vencidas"
-                    value={stats.vencidas}
+                    value={municipioStats.vencidas}
                     icon={AlertCircle}
                     variant="destructive"
                   />
                   <StatsCard
                     title="No Prazo"
-                    value={stats.noPrazo}
+                    value={municipioStats.noPrazo}
                     icon={Clock}
                     variant="warning"
                   />
                   <StatsCard
                     title="Regularizadas"
-                    value={stats.regularizadas}
+                    value={municipioStats.regularizadas}
                     icon={CheckCircle}
                     variant="success"
                   />
                   <StatsCard
                     title="Aguardando JVM"
-                    value={stats.aguardandoVerificacao}
+                    value={municipioStats.aguardandoVerificacao}
                     icon={AlertTriangle}
                     variant="info"
                   />
