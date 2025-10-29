@@ -11,16 +11,25 @@ interface UpdateFileUploadProps {
 }
 
 const normalizeColumnName = (name: string): string => {
-  return name.toLowerCase().trim().replace(/\s+/g, ' ');
+  return name
+    .toLowerCase()
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s]/g, '')
+    .replace(/\s+/g, '');
 };
 
 const findColumn = (row: any, possibleNames: string[]): any => {
   for (const name of possibleNames) {
     if (row[name] !== undefined) return row[name];
   }
+  
+  const normalizedPossibleNames = possibleNames.map(normalizeColumnName);
+  
   for (const key of Object.keys(row)) {
     const normalizedKey = normalizeColumnName(key);
-    if (possibleNames.some(name => normalizeColumnName(name) === normalizedKey)) {
+    if (normalizedPossibleNames.includes(normalizedKey)) {
       return row[key];
     }
   }
@@ -77,19 +86,19 @@ export const UpdateFileUpload = ({ onFileUpdate, currentData }: UpdateFileUpload
         let skippedCount = 0;
 
         newFileData.forEach((row) => {
-          const municipio = findColumn(row, ["Município", "MUNICÍPIO"]);
-          const numFormulario = findColumn(row, ["Núm. Formulário", "Nº Formulário", "Num. Formulário", "NUM. FORMULÁRIO"]);
-          const numeroPoste = findColumn(row, ["Número do Poste", "Numero do Poste", "NÚMERO DO POSTE"]);
-          const operadora = findColumn(row, ["Operadora", "OPERADORA"]);
-          const irregularidade = findColumn(row, ["Irregularidade", "IRREGULARIDADE"]);
-          const vencidas = findColumn(row, ["Vencidas", "Vencidas ", "VENCIDAS"]);
-          const noPrazo = findColumn(row, ["No Prazo", "No Prazo ", "NO PRAZO"]);
-          const emailEnviado = findColumn(row, ["E-mail Enviado?", "Email Enviado?", "E-mail Enviado", "EMAIL ENVIADO?"]);
-          const dataEnvioEmail = findColumn(row, ["Data Envio E-mail", "Data Envio Email", "DATA ENVIO E-MAIL"]);
-          const regularizado = findColumn(row, ["Regularizado?", "Regularizado", "REGULARIZADO?"]);
-          const bairro = findColumn(row, ["Bairro", "BAIRRO"]);
-          const logradouro = findColumn(row, ["Logradouro", "LOGRADOURO"]);
-          const numLogradouro = findColumn(row, ["Núm. Logradouro", "Nº Logradouro", "Num. Logradouro", "NUM. LOGRADOURO"]);
+          const municipio = findColumn(row, ["Município", "MUNICÍPIO", "Municipio", "municipio"]);
+          const numFormulario = findColumn(row, ["Núm. Formulário", "Nº Formulário", "Num. Formulário", "NUM. FORMULÁRIO", "Numero Formulario", "Num Formulario"]);
+          const numeroPoste = findColumn(row, ["Número do Poste", "Numero do Poste", "NÚMERO DO POSTE", "Numero Poste"]);
+          const operadora = findColumn(row, ["Operadora", "OPERADORA", "operadora"]);
+          const irregularidade = findColumn(row, ["Irregularidade", "IRREGULARIDADE", "irregularidade"]);
+          const vencidas = findColumn(row, ["Vencidas", "Vencidas ", "VENCIDAS", "vencidas"]);
+          const noPrazo = findColumn(row, ["No Prazo", "No Prazo ", "NO PRAZO", "NoPrazo"]);
+          const emailEnviado = findColumn(row, ["E-mail Enviado?", "Email Enviado?", "E-mail Enviado", "EMAIL ENVIADO?", "Email Enviado"]);
+          const dataEnvioEmail = findColumn(row, ["Data Envio E-mail", "Data Envio Email", "DATA ENVIO E-MAIL", "Data Envio Email"]);
+          const regularizado = findColumn(row, ["Regularizado?", "Regularizado", "REGULARIZADO?", "regularizado"]);
+          const bairro = findColumn(row, ["Bairro", "BAIRRO", "bairro"]);
+          const logradouro = findColumn(row, ["Logradouro", "LOGRADOURO", "logradouro"]);
+          const numLogradouro = findColumn(row, ["Núm. Logradouro", "Nº Logradouro", "Num. Logradouro", "NUM. LOGRADOURO", "Num Logradouro", "Numero Logradouro"]);
 
           const newItem: Irregularity = {
             municipio: String(municipio || "").trim(),
