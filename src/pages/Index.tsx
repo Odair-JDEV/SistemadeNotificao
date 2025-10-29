@@ -230,9 +230,13 @@ const Index = () => {
         (selectedStatus === "prazo" && item.vencidas >= 0 && item.regularizado === "Não") ||
         (selectedStatus === "regularizado" && item.regularizado === "Sim");
 
-      return matchesSearch && matchesMunicipio && matchesStatus;
+      // Filtrar por logradouro quando houver busca específica
+      const matchesLogradouro = !logradouroSearch.trim() || 
+        item.logradouro.toLowerCase().includes(logradouroSearch.toLowerCase());
+
+      return matchesSearch && matchesMunicipio && matchesStatus && matchesLogradouro;
     });
-  }, [data, searchTerm, selectedMunicipio, selectedStatus]);
+  }, [data, searchTerm, selectedMunicipio, selectedStatus, logradouroSearch]);
 
   const aguardandoVerificacaoData = useMemo(() => {
     return data.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm");
