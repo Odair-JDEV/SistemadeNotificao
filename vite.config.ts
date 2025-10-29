@@ -10,7 +10,9 @@ export default defineConfig(() => ({
     strictPort: true,
     allowedHosts: true as const,
     hmr: {
-      clientPort: 5000,
+      clientPort: 443,
+      protocol: 'wss',
+      host: process.env.REPLIT_DEV_DOMAIN || 'localhost',
     },
   },
   plugins: [react()],
