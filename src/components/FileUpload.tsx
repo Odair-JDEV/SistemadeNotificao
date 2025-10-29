@@ -55,9 +55,9 @@ export const FileUpload = ({ onFileUpload }: FileUploadProps) => {
           dataEnvioEmail: row[8] || "",
           regularizado: row[9] || "",
           statusVerificacao: (row[10] === "aguardando_verificacao_jvm" ? "aguardando_verificacao_jvm" : "normal") as "normal" | "aguardando_verificacao_jvm",
-          bairro: row[11] || "",
-          logradouro: row[12] || "",
-          numLogradouro: row[13]?.toString() || "",
+          bairro: row[10] || "",
+          logradouro: row[11] || "",
+          numLogradouro: row[12]?.toString() || "",
         })).filter(item => item.municipio && item.municipio !== "TOTAL GERAL");
 
         // Processar Page 2 - Gráfico (se existir)
