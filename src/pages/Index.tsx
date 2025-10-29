@@ -6,12 +6,13 @@ import { IrregularityTable } from "@/components/IrregularityTable";
 import { VerificacaoJVMTable } from "@/components/VerificacaoJVMTable";
 import { Filters } from "@/components/Filters";
 import { FluxoChart } from "@/components/FluxoChart";
+import { AnalysisDashboard } from "@/components/AnalysisDashboard";
 import { Irregularity } from "@/types/irregularity";
 import { AlertCircle, CheckCircle, Clock, FileText, Download, AlertTriangle } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 
@@ -24,6 +25,7 @@ const Index = () => {
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [activeTab, setActiveTab] = useState("registros");
   const [logradouroSearch, setLogradouroSearch] = useState("");
+  const [selectedIrregularidade, setSelectedIrregularidade] = useState("all");
 
   const handleFileUpload = (newData: Irregularity[], newChartData: any[]) => {
     setData(newData);
@@ -230,13 +232,15 @@ const Index = () => {
         (selectedStatus === "prazo" && item.vencidas >= 0 && item.regularizado === "Não") ||
         (selectedStatus === "regularizado" && item.regularizado === "Sim");
 
-      // Filtrar por logradouro quando houver busca específica
       const matchesLogradouro = !logradouroSearch.trim() || 
         item.logradouro.toLowerCase().includes(logradouroSearch.toLowerCase());
 
-      return matchesSearch && matchesMunicipio && matchesStatus && matchesLogradouro;
+      const matchesIrregularidade = selectedIrregularidade === "all" || 
+        item.irregularidade === selectedIrregularidade;
+
+      return matchesSearch && matchesMunicipio && matchesStatus && matchesLogradouro && matchesIrregularidade;
     });
-  }, [data, searchTerm, selectedMunicipio, selectedStatus, logradouroSearch]);
+  }, [data, searchTerm, selectedMunicipio, selectedStatus, logradouroSearch, selectedIrregularidade]);
 
   const aguardandoVerificacaoData = useMemo(() => {
     return data.filter((item) => item.statusVerificacao === "aguardando_verificacao_jvm");
@@ -413,6 +417,11 @@ const Index = () => {
               selectedStatus={selectedStatus}
               onStatusChange={setSelectedStatus}
               municipios={municipios}
+              logradouroSearch={logradouroSearch}
+              onLogradouroSearchChange={setLogradouroSearch}
+              selectedIrregularidade={selectedIrregularidade}
+              onIrregularidadeChange={setSelectedIrregularidade}
+              data={data}
             />
 
             {/* Estatísticas do Município Selecionado */}
@@ -492,16 +501,17 @@ const Index = () => {
               </Card>
             )}
 
-            {/* Tabs para Registros, Verificação JVM e Gráfico */}
+            {/* Tabs para Registros, Verificação JVM, Análises e Gráfico */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full max-w-2xl grid-cols-3">
-                <TabsTrigger value="registros">
+              <TabsList className="grid w-full max-w-3xl grid-cols-4">
+                <TabsTrigger value="registros" data-testid="tab-registros">
                   Irregularidades ({filteredData.length})
                 </TabsTrigger>
-                <TabsTrigger value="verificacao-jvm">
+                <TabsTrigger value="verificacao-jvm" data-testid="tab-verificacao-jvm">
                   Aguardando JVM ({stats.aguardandoVerificacao})
                 </TabsTrigger>
-                <TabsTrigger value="grafico">Gráfico de Fluxo</TabsTrigger>
+                <TabsTrigger value="analises" data-testid="tab-analises">Análises</TabsTrigger>
+                <TabsTrigger value="grafico" data-testid="tab-grafico">Gráfico de Fluxo</TabsTrigger>
               </TabsList>
               
               <TabsContent value="registros" className="space-y-4">
@@ -552,6 +562,11 @@ const Index = () => {
                     onConfirmarVerificacao={handleConfirmarVerificacaoJVM}
                   />
                 </div>
+              </TabsContent>
+
+              <TabsContent value="analises" className="space-y-4">
+                <h2 className="text-2xl font-semibold">Análises e Insights</h2>
+                <AnalysisDashboard data={data} />
               </TabsContent>
 
               <TabsContent value="grafico" className="space-y-4">
