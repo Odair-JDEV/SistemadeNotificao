@@ -353,6 +353,11 @@ const Index = () => {
                 value={stats.total}
                 icon={FileText}
                 variant="default"
+                onClick={() => {
+                  setSelectedStatus("all");
+                  setActiveTab("registros");
+                }}
+                data-testid="card-total"
               />
               <StatsCard
                 title="Vencidas"
@@ -360,18 +365,33 @@ const Index = () => {
                 icon={AlertCircle}
                 variant="destructive"
                 description="Requerem atenção imediata"
+                onClick={() => {
+                  setSelectedStatus("vencido");
+                  setActiveTab("registros");
+                }}
+                data-testid="card-vencidas"
               />
               <StatsCard
                 title="No Prazo"
                 value={stats.noPrazo}
                 icon={Clock}
                 variant="warning"
+                onClick={() => {
+                  setSelectedStatus("prazo");
+                  setActiveTab("registros");
+                }}
+                data-testid="card-no-prazo"
               />
               <StatsCard
                 title="Regularizadas"
                 value={stats.regularizadas}
                 icon={CheckCircle}
                 variant="success"
+                onClick={() => {
+                  setSelectedStatus("regularizado");
+                  setActiveTab("registros");
+                }}
+                data-testid="card-regularizadas"
               />
               <StatsCard
                 title="Aguardando JVM"
@@ -380,6 +400,7 @@ const Index = () => {
                 variant="info"
                 description="Reincidências para verificar"
                 onClick={() => setActiveTab("verificacao-jvm")}
+                data-testid="card-aguardando-jvm"
               />
             </div>
 
@@ -420,30 +441,52 @@ const Index = () => {
                     value={municipioStats.total}
                     icon={FileText}
                     variant="default"
+                    onClick={() => {
+                      setSelectedStatus("all");
+                      setActiveTab("registros");
+                    }}
+                    data-testid="card-municipio-total"
                   />
                   <StatsCard
                     title="Vencidas"
                     value={municipioStats.vencidas}
                     icon={AlertCircle}
                     variant="destructive"
+                    onClick={() => {
+                      setSelectedStatus("vencido");
+                      setActiveTab("registros");
+                    }}
+                    data-testid="card-municipio-vencidas"
                   />
                   <StatsCard
                     title="No Prazo"
                     value={municipioStats.noPrazo}
                     icon={Clock}
                     variant="warning"
+                    onClick={() => {
+                      setSelectedStatus("prazo");
+                      setActiveTab("registros");
+                    }}
+                    data-testid="card-municipio-no-prazo"
                   />
                   <StatsCard
                     title="Regularizadas"
                     value={municipioStats.regularizadas}
                     icon={CheckCircle}
                     variant="success"
+                    onClick={() => {
+                      setSelectedStatus("regularizado");
+                      setActiveTab("registros");
+                    }}
+                    data-testid="card-municipio-regularizadas"
                   />
                   <StatsCard
                     title="Aguardando JVM"
                     value={municipioStats.aguardandoVerificacao}
                     icon={AlertTriangle}
                     variant="info"
+                    onClick={() => setActiveTab("verificacao-jvm")}
+                    data-testid="card-municipio-aguardando-jvm"
                   />
                 </div>
               </Card>

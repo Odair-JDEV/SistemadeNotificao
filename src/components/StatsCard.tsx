@@ -8,9 +8,10 @@ interface StatsCardProps {
   variant?: "default" | "warning" | "success" | "destructive" | "info";
   description?: string;
   onClick?: () => void;
+  "data-testid"?: string;
 }
 
-export const StatsCard = ({ title, value, icon: Icon, variant = "default", description, onClick }: StatsCardProps) => {
+export const StatsCard = ({ title, value, icon: Icon, variant = "default", description, onClick, "data-testid": dataTestId }: StatsCardProps) => {
   const variantStyles = {
     default: "text-primary",
     warning: "text-warning",
@@ -23,6 +24,7 @@ export const StatsCard = ({ title, value, icon: Icon, variant = "default", descr
     <Card 
       className={`transition-all hover:shadow-lg ${onClick ? 'cursor-pointer hover:scale-105' : ''}`}
       onClick={onClick}
+      data-testid={dataTestId}
     >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
